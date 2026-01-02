@@ -2,16 +2,16 @@
 	"schemaVersion": 1,
 	"id": "tutorialmod",
 	"version": "${version}",
-	"name": "Tutorial Mod",
-	"description": "Learning Fabric modding by adding cool blocks!",
+	"name": "TutorialMod",
+	"description": "This is an example description! Tell everyone what your mod is about!",
 	"authors": [
-		"Timbo"
+		"Me!"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
-	"license": "MIT",
+	"license": "CC0-1.0",
 	"icon": "assets/tutorialmod/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -20,13 +20,20 @@
 		],
 		"client": [
 			"com.timbo.tutorialmod.TutorialModClient"
+		],
+		"fabric-datagen": [
+			"com.timbo.tutorialmod.TutorialModDataGenerator"
 		]
 	},
 	"mixins": [
-		"tutorialmod.mixins.json"
+		"tutorialmod.mixins.json",
+		{
+			"config": "tutorialmod.client.mixins.json",
+			"environment": "client"
+		}
 	],
 	"depends": {
-		"fabricloader": ">=0.18.2",
+		"fabricloader": ">=0.18.4",
 		"minecraft": "~1.21.11",
 		"java": ">=21",
 		"fabric-api": "*"
