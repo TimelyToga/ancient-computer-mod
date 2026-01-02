@@ -5,16 +5,22 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.core.Registry;
 import com.timbo.tutorialmod.TutorialMod;
+import net.minecraft.resources.Identifier;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.minecraft.world.item.CreativeModeTabs;
 
 public class ModItems {
   public static final Item SUSPICIOUS_SUBSTANCE =
       register("suspicious_substance", Item::new, new Item.Properties());
 
   public static void initialize() {
-    LOGGER.info("Registering Mod Items for " + TutorialMod.MOD_ID);
+    TutorialMod.LOGGER.info("Registering Mod Items for " + TutorialMod.MOD_ID);
+
+    ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(content -> {
+      content.accept(SUSPICIOUS_SUBSTANCE);
+    });
   }
 
   public static <GenericItem extends Item> GenericItem register(
