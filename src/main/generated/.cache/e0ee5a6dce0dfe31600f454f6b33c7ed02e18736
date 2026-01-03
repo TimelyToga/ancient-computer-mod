@@ -1,0 +1,7 @@
+// 1.21.11	-999999999-01-01T00:00:00	TutorialMod/TutorialModRecipeProvider
+eeda367cb84b8769b969bb764949898c47bcc022 data/tutorialmod/advancement/recipes/misc/suspicious_substance.json
+e76e715381829d3d6ae6133a1150e8aa2fc948f4 data/tutorialmod/advancement/recipes/misc/suspicious_substance_block.json
+8e262251585b2f2828bdb344fa859317d6fddd6f data/tutorialmod/advancement/recipes/misc/suspicious_substance_from_block.json
+fc1a7b574c51ed0b1c32d59895ae46860b4a4318 data/tutorialmod/recipe/suspicious_substance.json
+4e65945f66667250489618fb6af04922adca1dc4 data/tutorialmod/recipe/suspicious_substance_block.json
+419b105f1f7617e133fafd909aedbd88be6b0fec data/tutorialmod/recipe/suspicious_substance_from_block.json
