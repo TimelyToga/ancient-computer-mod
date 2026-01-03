@@ -1,3 +1,5 @@
 {
-  "item.tutorialmod.suspicious_substance": "Suspicious Substance"
+  "item.tutorialmod.suspicious_substance": "Suspicious Substance",
+  "block.tutorialmod.suspicious_substance_block": "Suspicious Substance Block",
+  "item.tutorialmod.suspicious_substance_block": "Suspicious Substance Block"
 }
