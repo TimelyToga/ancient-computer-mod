@@ -1,7 +1,7 @@
 {
   "replace": false,
   "values": [
-    "tutorialmod:suspicious_substance_block",
-    "tutorialmod:computer_block"
+    "ancientcomputer:suspicious_substance_block",
+    "ancientcomputer:computer_block"
   ]
 }

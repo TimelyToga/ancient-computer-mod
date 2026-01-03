@@ -1,9 +1,9 @@
 {
 	"schemaVersion": 1,
-	"id": "tutorialmod",
+	"id": "ancientcomputer",
 	"version": "${version}",
-	"name": "TutorialMod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "Ancient Computer",
+	"description": "Adds Ancient Computers that can wirelessly transmit redstone signals across any distance.",
 	"authors": [
 		"Histograms4You"
 	],
@@ -12,23 +12,23 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/tutorialmod/icon.png",
+	"icon": "assets/ancientcomputer/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.timbo.tutorialmod.TutorialMod"
+			"com.timbo.ancientcomputer.AncientComputerMod"
 		],
 		"client": [
-			"com.timbo.tutorialmod.TutorialModClient"
+			"com.timbo.ancientcomputer.AncientComputerClient"
 		],
 		"fabric-datagen": [
-			"com.timbo.tutorialmod.TutorialModDataGenerator"
+			"com.timbo.ancientcomputer.AncientComputerDataGenerator"
 		]
 	},
 	"mixins": [
-		"tutorialmod.mixins.json",
+		"ancientcomputer.mixins.json",
 		{
-			"config": "tutorialmod.client.mixins.json",
+			"config": "ancientcomputer.client.mixins.json",
 			"environment": "client"
 		}
 	],

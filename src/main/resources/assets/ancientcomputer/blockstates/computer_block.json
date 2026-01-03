@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "activated=false,axis=x": {
+      "model": "ancientcomputer:block/computer_block_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "activated=false,axis=y": {
+      "model": "ancientcomputer:block/computer_block"
+    },
+    "activated=false,axis=z": {
+      "model": "ancientcomputer:block/computer_block_horizontal",
+      "x": 90
+    },
+    "activated=true,axis=x": {
+      "model": "ancientcomputer:block/computer_block_horizontal_on",
+      "x": 90,
+      "y": 90
+    },
+    "activated=true,axis=y": {
+      "model": "ancientcomputer:block/computer_block_on"
+    },
+    "activated=true,axis=z": {
+      "model": "ancientcomputer:block/computer_block_horizontal_on",
+      "x": 90
+    }
+  }
+}

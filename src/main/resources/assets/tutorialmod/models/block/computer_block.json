@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "textures": {
-    "end": "tutorialmod:block/computer_top_off",
-    "side": "tutorialmod:block/computer_side_off"
-  }
-}
-
