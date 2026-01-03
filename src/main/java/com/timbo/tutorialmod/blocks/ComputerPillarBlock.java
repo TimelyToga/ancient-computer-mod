@@ -82,12 +82,12 @@ public class ComputerPillarBlock extends BaseEntityBlock {
             // Show link status
             if (computer.isLinked()) {
                 BlockPos linkedPos = computer.getLinkedPos();
-                int outputSignal = computer.getOutputSignal();
-                int inputSignal = computer.getLastInputSignal();
+                int signalLevel = computer.getCurrentSignalLevel();
+                String role = computer.isTransmitter() ? "INPUT" : "OUTPUT";
+                String arrow = computer.isTransmitter() ? " → " : " ← ";
                 player.displayClientMessage(
-                    Component.literal("Linked to: " + linkedPos.toShortString() + 
-                        " | Input: " + inputSignal + " | Output: " + outputSignal)
-                        .withStyle(ChatFormatting.AQUA),
+                    Component.literal("[" + role + "] " + pos.toShortString() + arrow + linkedPos.toShortString() + " | Signal: " + signalLevel)
+                        .withStyle(computer.isTransmitter() ? ChatFormatting.GOLD : ChatFormatting.AQUA),
                     true
                 );
             } else {
@@ -124,11 +124,13 @@ public class ComputerPillarBlock extends BaseEntityBlock {
     protected void neighborChanged(BlockState state, Level world, BlockPos pos, Block neighborBlock, @Nullable Orientation orientation, boolean movedByPiston) {
         super.neighborChanged(state, world, pos, neighborBlock, orientation, movedByPiston);
         
+        // Transmitters will pick up changes in their tick method
+        // This is here for immediate response to neighbor changes
         if (!world.isClientSide()) {
             BlockEntity blockEntity = world.getBlockEntity(pos);
-            if (blockEntity instanceof AncientComputerBlockEntity computer) {
+            if (blockEntity instanceof AncientComputerBlockEntity computer && computer.isTransmitter()) {
                 int signal = world.getBestNeighborSignal(pos);
-                computer.onInputSignalChanged(signal);
+                computer.transmitSignal(signal);
             }
         }
     }
@@ -136,14 +138,7 @@ public class ComputerPillarBlock extends BaseEntityBlock {
     @Override
     protected void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean movedByPiston) {
         super.onPlace(state, world, pos, oldState, movedByPiston);
-        if (!world.isClientSide()) {
-            // Check initial redstone state
-            BlockEntity blockEntity = world.getBlockEntity(pos);
-            if (blockEntity instanceof AncientComputerBlockEntity computer) {
-                int signal = world.getBestNeighborSignal(pos);
-                computer.onInputSignalChanged(signal);
-            }
-        }
+        // Initial state will be handled by tick
     }
 
     @Override
@@ -155,11 +150,6 @@ public class ComputerPillarBlock extends BaseEntityBlock {
             BlockEntity linkedEntity = world.getBlockEntity(linkedPos);
             if (linkedEntity instanceof AncientComputerBlockEntity linkedComputer) {
                 linkedComputer.clearLink();
-                // Update the linked block's activated state
-                BlockState linkedState = world.getBlockState(linkedPos);
-                if (linkedState.hasProperty(ACTIVATED) && linkedState.getValue(ACTIVATED)) {
-                    world.setBlock(linkedPos, linkedState.setValue(ACTIVATED, false), Block.UPDATE_ALL);
-                }
             }
         }
         super.affectNeighborsAfterRemoval(state, world, pos, movedByPiston);

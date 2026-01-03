@@ -1,7 +1,5 @@
 package com.timbo.tutorialmod.blocks;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -12,22 +10,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 import org.jetbrains.annotations.Nullable;
-import java.util.Optional;
 
 public class AncientComputerBlockEntity extends BlockEntity {
     @Nullable
     private BlockPos linkedPos = null;
-    private int lastInputSignal = 0;
-
-    // Data record for serialization
-    public record Data(Optional<BlockPos> linkedPos, int lastInputSignal) {
-        public static final Codec<Data> CODEC = RecordCodecBuilder.create(instance ->
-            instance.group(
-                BlockPos.CODEC.optionalFieldOf("linkedPos").forGetter(Data::linkedPos),
-                Codec.INT.fieldOf("lastInputSignal").orElse(0).forGetter(Data::lastInputSignal)
-            ).apply(instance, Data::new)
-        );
-    }
+    private boolean isTransmitter = false;  // true = sends signal, false = receives signal
+    private int currentSignalLevel = 0;     // The signal level this computer is handling
 
     public AncientComputerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ANCIENT_COMPUTER_BLOCK_ENTITY, pos, state);
@@ -37,66 +25,99 @@ public class AncientComputerBlockEntity extends BlockEntity {
     public BlockPos getLinkedPos() {
         return linkedPos;
     }
+    
+    public boolean isTransmitter() {
+        return isTransmitter;
+    }
+    
+    public boolean isReceiver() {
+        return linkedPos != null && !isTransmitter;
+    }
 
-    public void setLinkedPos(@Nullable BlockPos pos) {
-        this.linkedPos = pos;
-        setChanged();
-        if (level != null && !level.isClientSide()) {
-            // Force full update of this block and neighbors
-            BlockState state = getBlockState();
-            level.sendBlockUpdated(getBlockPos(), state, state, Block.UPDATE_ALL);
-            level.updateNeighborsAt(getBlockPos(), state.getBlock());
-            
-            // Also update the activated state immediately
-            updateActivatedState();
-        }
+    /**
+     * Sets up this computer as a transmitter linked to the given receiver position.
+     */
+    public void setAsTransmitter(BlockPos receiverPos) {
+        this.linkedPos = receiverPos;
+        this.isTransmitter = true;
+        this.currentSignalLevel = 0;
+        markDirtyAndUpdate();
+    }
+    
+    /**
+     * Sets up this computer as a receiver linked to the given transmitter position.
+     */
+    public void setAsReceiver(BlockPos transmitterPos) {
+        this.linkedPos = transmitterPos;
+        this.isTransmitter = false;
+        this.currentSignalLevel = 0;
+        markDirtyAndUpdate();
     }
 
     public void clearLink() {
         this.linkedPos = null;
-        this.lastInputSignal = 0;
-        setChanged();
-        if (level != null && !level.isClientSide()) {
-            BlockState state = getBlockState();
-            level.sendBlockUpdated(getBlockPos(), state, state, Block.UPDATE_ALL);
-            level.updateNeighborsAt(getBlockPos(), state.getBlock());
-            updateActivatedState();
-        }
+        this.isTransmitter = false;
+        this.currentSignalLevel = 0;
+        markDirtyAndUpdate();
+        updateActivatedState();
     }
 
     public boolean isLinked() {
         return linkedPos != null;
     }
+    
+    private void markDirtyAndUpdate() {
+        setChanged();
+        if (level != null && !level.isClientSide()) {
+            BlockState state = getBlockState();
+            level.sendBlockUpdated(getBlockPos(), state, state, Block.UPDATE_ALL);
+        }
+    }
 
     /**
-     * Called when the input signal to this computer changes.
-     * Propagates the signal to the linked computer.
+     * Called by the transmitter when its input signal changes.
+     * Updates the receiver to output this signal.
      */
-    public void onInputSignalChanged(int newSignal) {
+    public void transmitSignal(int signalLevel) {
         if (level == null || level.isClientSide()) return;
+        if (!isTransmitter || linkedPos == null) return;
         
-        if (newSignal != lastInputSignal) {
-            lastInputSignal = newSignal;
+        if (signalLevel != currentSignalLevel) {
+            currentSignalLevel = signalLevel;
             setChanged();
             
-            // Update our own activated state
+            // Update our activated state (transmitter lights up when sending signal)
             updateActivatedState();
             
-            // Update the linked computer's output
-            if (linkedPos != null) {
-                BlockEntity linkedEntity = level.getBlockEntity(linkedPos);
-                if (linkedEntity instanceof AncientComputerBlockEntity linkedComputer) {
-                    // Trigger a full update at the linked position
-                    BlockState linkedState = level.getBlockState(linkedPos);
-                    level.updateNeighborsAt(linkedPos, linkedState.getBlock());
-                    linkedComputer.updateActivatedState();
-                }
+            // Tell the receiver to update
+            BlockEntity linkedEntity = level.getBlockEntity(linkedPos);
+            if (linkedEntity instanceof AncientComputerBlockEntity receiver) {
+                receiver.receiveSignal(signalLevel);
             }
         }
     }
     
     /**
-     * Updates the ACTIVATED blockstate based on current signal states.
+     * Called on the receiver when the transmitter sends a new signal.
+     */
+    public void receiveSignal(int signalLevel) {
+        if (level == null || level.isClientSide()) return;
+        if (isTransmitter) return;  // Only receivers handle this
+        
+        if (signalLevel != currentSignalLevel) {
+            currentSignalLevel = signalLevel;
+            setChanged();
+            
+            // Update our activated state (receiver lights up when outputting signal)
+            updateActivatedState();
+            
+            // Notify neighbors that our redstone output changed
+            level.updateNeighborsAt(getBlockPos(), getBlockState().getBlock());
+        }
+    }
+    
+    /**
+     * Updates the ACTIVATED blockstate based on current signal.
      */
     public void updateActivatedState() {
         if (level == null || level.isClientSide()) return;
@@ -105,7 +126,7 @@ public class AncientComputerBlockEntity extends BlockEntity {
         if (!state.hasProperty(ComputerPillarBlock.ACTIVATED)) return;
         
         boolean currentlyActivated = state.getValue(ComputerPillarBlock.ACTIVATED);
-        boolean shouldBeActivated = lastInputSignal > 0 || getOutputSignal() > 0;
+        boolean shouldBeActivated = currentSignalLevel > 0;
         
         if (currentlyActivated != shouldBeActivated) {
             level.setBlock(getBlockPos(), state.setValue(ComputerPillarBlock.ACTIVATED, shouldBeActivated), Block.UPDATE_ALL);
@@ -113,29 +134,18 @@ public class AncientComputerBlockEntity extends BlockEntity {
     }
 
     /**
-     * Gets the output signal strength based on the linked computer's input.
+     * Gets the output signal strength (only receivers output signal).
      */
     public int getOutputSignal() {
-        if (level == null || linkedPos == null) return 0;
-        
-        BlockEntity linkedEntity = level.getBlockEntity(linkedPos);
-        if (linkedEntity instanceof AncientComputerBlockEntity linkedComputer) {
-            return linkedComputer.lastInputSignal;
-        }
-        return 0;
+        if (!isLinked() || isTransmitter) return 0;
+        return currentSignalLevel;
     }
-
-    public int getLastInputSignal() {
-        return lastInputSignal;
-    }
-
-    public Data getData() {
-        return new Data(Optional.ofNullable(linkedPos), lastInputSignal);
-    }
-
-    public void setData(Data data) {
-        this.linkedPos = data.linkedPos().orElse(null);
-        this.lastInputSignal = data.lastInputSignal();
+    
+    /**
+     * Gets the current signal level for display purposes.
+     */
+    public int getCurrentSignalLevel() {
+        return currentSignalLevel;
     }
 
     @Override
@@ -144,13 +154,15 @@ public class AncientComputerBlockEntity extends BlockEntity {
     }
 
     /**
-     * Tick method to check for redstone input changes.
+     * Tick method - transmitters check for redstone input changes.
      */
     public static void tick(Level level, BlockPos pos, BlockState state, AncientComputerBlockEntity blockEntity) {
         if (level.isClientSide()) return;
         
-        // Check the current redstone input
-        int inputSignal = level.getBestNeighborSignal(pos);
-        blockEntity.onInputSignalChanged(inputSignal);
+        // Only transmitters check for input signal
+        if (blockEntity.isTransmitter && blockEntity.linkedPos != null) {
+            int inputSignal = level.getBestNeighborSignal(pos);
+            blockEntity.transmitSignal(inputSignal);
+        }
     }
 }

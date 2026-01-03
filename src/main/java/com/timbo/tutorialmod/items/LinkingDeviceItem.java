@@ -42,14 +42,14 @@ public class LinkingDeviceItem extends Item {
             return InteractionResult.PASS;
         }
 
-        // Check if we have a stored position
+        // Check if we have a stored position (transmitter)
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         
         if (customData != null && customData.copyTag().contains("x")) {
-            // We have a stored position - try to link
+            // We have a stored transmitter position - set up receiver
             CompoundTag tag = customData.copyTag();
             
-            BlockPos storedPos = new BlockPos(
+            BlockPos transmitterPos = new BlockPos(
                 tag.getIntOr("x", 0), 
                 tag.getIntOr("y", 0), 
                 tag.getIntOr("z", 0)
@@ -58,7 +58,7 @@ public class LinkingDeviceItem extends Item {
             String currentDimension = world.dimension().registry().toString();
 
             // Don't allow linking to self
-            if (storedPos.equals(pos) && storedDimension.equals(currentDimension)) {
+            if (transmitterPos.equals(pos) && storedDimension.equals(currentDimension)) {
                 if (context.getPlayer() != null) {
                     context.getPlayer().displayClientMessage(
                         Component.literal("Cannot link a computer to itself! Click a different computer.")
@@ -69,7 +69,7 @@ public class LinkingDeviceItem extends Item {
                 return InteractionResult.FAIL;
             }
 
-            // Check dimensions match (for simplicity, require same dimension)
+            // Check dimensions match
             if (!storedDimension.equals(currentDimension)) {
                 if (context.getPlayer() != null) {
                     context.getPlayer().displayClientMessage(
@@ -81,45 +81,80 @@ public class LinkingDeviceItem extends Item {
                 return InteractionResult.FAIL;
             }
 
-            // Verify the stored block still exists and is an Ancient Computer
-            BlockEntity storedEntity = world.getBlockEntity(storedPos);
-            if (!(storedEntity instanceof AncientComputerBlockEntity otherComputer)) {
+            // Verify the transmitter still exists
+            BlockEntity transmitterEntity = world.getBlockEntity(transmitterPos);
+            if (!(transmitterEntity instanceof AncientComputerBlockEntity transmitter)) {
                 if (context.getPlayer() != null) {
                     context.getPlayer().displayClientMessage(
-                        Component.literal("Stored computer no longer exists! Storing this one instead.")
+                        Component.literal("Source computer no longer exists! Select a new source.")
                             .withStyle(ChatFormatting.YELLOW), 
                         true
                     );
                 }
-                // Store this position instead
+                // Store this position as new transmitter
                 storePosition(stack, pos, world);
+                if (context.getPlayer() != null) {
+                    context.getPlayer().displayClientMessage(
+                        Component.literal("Source (input) selected: " + pos.toShortString() + " - Now click destination")
+                            .withStyle(ChatFormatting.AQUA), 
+                        true
+                    );
+                }
                 return InteractionResult.SUCCESS;
             }
 
-            // Link the current computer to the stored one
-            computer.setLinkedPos(storedPos);
-            
-            // Also link the stored computer to this one (bidirectional)
-            otherComputer.setLinkedPos(pos);
+            // Clear any existing links
+            if (transmitter.isLinked()) {
+                BlockPos oldLinkedPos = transmitter.getLinkedPos();
+                BlockEntity oldLinked = world.getBlockEntity(oldLinkedPos);
+                if (oldLinked instanceof AncientComputerBlockEntity oldComputer) {
+                    oldComputer.clearLink();
+                }
+            }
+            if (computer.isLinked()) {
+                BlockPos oldLinkedPos = computer.getLinkedPos();
+                BlockEntity oldLinked = world.getBlockEntity(oldLinkedPos);
+                if (oldLinked instanceof AncientComputerBlockEntity oldComputer) {
+                    oldComputer.clearLink();
+                }
+            }
+
+            // Set up the link: transmitter → receiver
+            transmitter.setAsTransmitter(pos);      // First clicked = transmitter (input)
+            computer.setAsReceiver(transmitterPos); // Second clicked = receiver (output)
 
             // Clear the stored position
             stack.remove(DataComponents.CUSTOM_DATA);
 
             if (context.getPlayer() != null) {
                 context.getPlayer().displayClientMessage(
-                    Component.literal("✓ Linked computers at " + storedPos.toShortString() + " ↔ " + pos.toShortString())
+                    Component.literal("✓ Linked: " + transmitterPos.toShortString() + " (input) → " + pos.toShortString() + " (output)")
                         .withStyle(ChatFormatting.GREEN), 
                     true
                 );
             }
             return InteractionResult.SUCCESS;
         } else {
-            // No stored position - store this one
+            // No stored position - store this one as the transmitter (source)
+            
+            // If this computer is already linked, show its status
+            if (computer.isLinked()) {
+                BlockPos linkedPos = computer.getLinkedPos();
+                String role = computer.isTransmitter() ? "input → " + linkedPos.toShortString() : linkedPos.toShortString() + " → output";
+                if (context.getPlayer() != null) {
+                    context.getPlayer().displayClientMessage(
+                        Component.literal("This computer is already linked as " + role + ". Selecting as new source...")
+                            .withStyle(ChatFormatting.YELLOW), 
+                        true
+                    );
+                }
+            }
+            
             storePosition(stack, pos, world);
             
             if (context.getPlayer() != null) {
                 context.getPlayer().displayClientMessage(
-                    Component.literal("First computer selected: " + pos.toShortString() + " - Now click second computer")
+                    Component.literal("Source (input) selected: " + pos.toShortString() + " - Now click destination (output)")
                         .withStyle(ChatFormatting.AQUA), 
                     true
                 );
