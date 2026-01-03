@@ -5,7 +5,9 @@
     "a": "minecraft:amethyst_shard"
   },
   "pattern": [
-    "a a"
+    "  a",
+    " a ",
+    "a  "
   ],
   "result": {
     "count": 1,

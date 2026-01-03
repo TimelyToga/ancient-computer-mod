@@ -39,8 +39,11 @@ public class TutorialModRecipeProvider extends FabricRecipeProvider{
 
 			@Override
 			public void buildRecipes() {
+				// Suspicious Substance recipes
 				shaped(RecipeCategory.MISC, suspiciousSubstanceItem)
-					.pattern("a a")
+					.pattern("  a")
+					.pattern(" a ")
+					.pattern("a  ")
 					.define('a', Items.AMETHYST_SHARD)
 					.unlockedBy("has_amethyst", has(Items.AMETHYST_SHARD))
 					.save(output);
@@ -54,6 +57,46 @@ public class TutorialModRecipeProvider extends FabricRecipeProvider{
 					.requires(suspiciousSubstanceBlock)
 					.unlockedBy("has_suspicious_substance_block", has(suspiciousSubstanceBlock))
 					.save(output, ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(TutorialMod.MOD_ID, "suspicious_substance_from_block")));
+				
+				// Ancient Computer recipe
+				// [Polished Diorite] [Polished Diorite] [Polished Diorite]
+				// [Observer]         [Echo Shard]       [Observer]
+				// [Polished Diorite] [Polished Diorite] [Polished Diorite]
+				shaped(RecipeCategory.REDSTONE, ModBlocks.COMPUTER_BLOCK)
+					.pattern("DDD")
+					.pattern("OEO")
+					.pattern("DDD")
+					.define('D', Items.POLISHED_DIORITE)
+					.define('E', Items.ECHO_SHARD)
+					.define('O', Items.OBSERVER)
+					.unlockedBy("has_echo_shard", has(Items.ECHO_SHARD))
+					.save(output);
+				
+				// Linking Device recipe
+				// [   ] [Redstone] [   ]
+				// [Redstone] [Echo Shard] [Redstone]
+				// [   ] [Redstone] [   ]
+				shaped(RecipeCategory.TOOLS, ModItems.LINKING_DEVICE)
+					.pattern(" R ")
+					.pattern("RER")
+					.pattern(" R ")
+					.define('R', Items.REDSTONE)
+					.define('E', Items.ECHO_SHARD)
+					.unlockedBy("has_echo_shard", has(Items.ECHO_SHARD))
+					.save(output);
+				
+				// Echo Shard crafting recipe
+				// [   ] [Suspicious Substance] [   ]
+				// [Suspicious Substance] [Eye of Ender] [Suspicious Substance]
+				// [   ] [Suspicious Substance] [   ]
+				shaped(RecipeCategory.MISC, Items.ECHO_SHARD)
+					.pattern(" S ")
+					.pattern("SES")
+					.pattern(" S ")
+					.define('S', suspiciousSubstanceItem)
+					.define('E', Items.ENDER_EYE)
+					.unlockedBy("has_suspicious_substance", has(suspiciousSubstanceItem))
+					.save(output, ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(TutorialMod.MOD_ID, "echo_shard_from_suspicious_substance")));
 			}
 		};
 	}
