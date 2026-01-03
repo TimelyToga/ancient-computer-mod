@@ -1,13 +1,19 @@
 package com.timbo.tutorialmod.blocks;
 
+import com.timbo.tutorialmod.sounds.ModSounds;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -108,6 +114,9 @@ public class AncientComputerBlockEntity extends BlockEntity {
             currentSignalLevel = signalLevel;
             setChanged();
             
+            // Play link_updated sound at the receiver block (quiet volume)
+            level.playSound(null, getBlockPos(), ModSounds.LINK_UPDATED, SoundSource.BLOCKS, 0.3f, 1.0f);
+            
             // Update our activated state (receiver lights up when outputting signal)
             updateActivatedState();
             
@@ -151,6 +160,45 @@ public class AncientComputerBlockEntity extends BlockEntity {
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
+    }
+
+    @Override
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        
+        output.putBoolean("isTransmitter", isTransmitter);
+        output.putInt("signalLevel", currentSignalLevel);
+        
+        if (linkedPos != null) {
+            output.putInt("linkedX", linkedPos.getX());
+            output.putInt("linkedY", linkedPos.getY());
+            output.putInt("linkedZ", linkedPos.getZ());
+        }
+    }
+
+    @Override
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        
+        isTransmitter = input.getBooleanOr("isTransmitter", false);
+        currentSignalLevel = input.getIntOr("signalLevel", 0);
+        
+        // Check if we have linked position data
+        var linkedXOpt = input.getInt("linkedX");
+        if (linkedXOpt.isPresent()) {
+            linkedPos = new BlockPos(
+                linkedXOpt.get(),
+                input.getIntOr("linkedY", 0),
+                input.getIntOr("linkedZ", 0)
+            );
+        } else {
+            linkedPos = null;
+        }
     }
 
     /**

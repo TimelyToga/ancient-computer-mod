@@ -2,11 +2,13 @@ package com.timbo.tutorialmod.items;
 
 import com.timbo.tutorialmod.blocks.AncientComputerBlockEntity;
 import com.timbo.tutorialmod.blocks.ModBlocks;
+import com.timbo.tutorialmod.sounds.ModSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -126,6 +128,9 @@ public class LinkingDeviceItem extends Item {
             // Clear the stored position
             stack.remove(DataComponents.CUSTOM_DATA);
 
+            // Play link_established sound at the receiver (second clicked computer)
+            world.playSound(null, pos, ModSounds.LINK_ESTABLISHED, SoundSource.BLOCKS, 1.0f, 1.0f);
+
             if (context.getPlayer() != null) {
                 context.getPlayer().displayClientMessage(
                     Component.literal("✓ Linked: " + transmitterPos.toShortString() + " (input) → " + pos.toShortString() + " (output)")
@@ -135,7 +140,30 @@ public class LinkingDeviceItem extends Item {
             }
             return InteractionResult.SUCCESS;
         } else {
-            // No stored position - store this one as the transmitter (source)
+            // No stored position - check if player is sneaking to show status
+            if (context.getPlayer() != null && context.getPlayer().isShiftKeyDown()) {
+                // Sneaking + linking device = show status without selecting
+                world.playSound(null, pos, ModSounds.LINK_INQUIRY, SoundSource.BLOCKS, 1.0f, 1.0f);
+                
+                if (computer.isLinked()) {
+                    BlockPos linkedPos = computer.getLinkedPos();
+                    int signalLevel = computer.getCurrentSignalLevel();
+                    String role = computer.isTransmitter() ? "INPUT" : "OUTPUT";
+                    String arrow = computer.isTransmitter() ? " → " : " ← ";
+                    context.getPlayer().displayClientMessage(
+                        Component.literal("[" + role + "] " + pos.toShortString() + arrow + linkedPos.toShortString() + " | Signal: " + signalLevel)
+                            .withStyle(computer.isTransmitter() ? ChatFormatting.GOLD : ChatFormatting.AQUA),
+                        true
+                    );
+                } else {
+                    context.getPlayer().displayClientMessage(
+                        Component.literal("Not linked - Use Linking Device to connect")
+                            .withStyle(ChatFormatting.YELLOW),
+                        true
+                    );
+                }
+                return InteractionResult.SUCCESS;
+            }
             
             // If this computer is already linked, show its status
             if (computer.isLinked()) {
@@ -151,6 +179,9 @@ public class LinkingDeviceItem extends Item {
             }
             
             storePosition(stack, pos, world);
+            
+            // Play link_started sound at the first clicked computer
+            world.playSound(null, pos, ModSounds.LINK_STARTED, SoundSource.BLOCKS, 1.0f, 1.0f);
             
             if (context.getPlayer() != null) {
                 context.getPlayer().displayClientMessage(

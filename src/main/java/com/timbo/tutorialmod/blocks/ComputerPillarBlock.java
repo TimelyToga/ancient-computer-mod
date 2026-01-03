@@ -1,13 +1,11 @@
 package com.timbo.tutorialmod.blocks;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.ChatFormatting;
+import com.timbo.tutorialmod.sounds.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -23,7 +21,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.redstone.Orientation;
-import net.minecraft.world.phys.BlockHitResult;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -71,35 +68,6 @@ public class ComputerPillarBlock extends BaseEntityBlock {
         return createTickerHelper(type, ModBlockEntities.ANCIENT_COMPUTER_BLOCK_ENTITY, AncientComputerBlockEntity::tick);
     }
 
-    @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
-        if (world.isClientSide()) {
-            return InteractionResult.SUCCESS;
-        }
-
-        BlockEntity blockEntity = world.getBlockEntity(pos);
-        if (blockEntity instanceof AncientComputerBlockEntity computer) {
-            // Show link status
-            if (computer.isLinked()) {
-                BlockPos linkedPos = computer.getLinkedPos();
-                int signalLevel = computer.getCurrentSignalLevel();
-                String role = computer.isTransmitter() ? "INPUT" : "OUTPUT";
-                String arrow = computer.isTransmitter() ? " → " : " ← ";
-                player.displayClientMessage(
-                    Component.literal("[" + role + "] " + pos.toShortString() + arrow + linkedPos.toShortString() + " | Signal: " + signalLevel)
-                        .withStyle(computer.isTransmitter() ? ChatFormatting.GOLD : ChatFormatting.AQUA),
-                    true
-                );
-            } else {
-                player.displayClientMessage(
-                    Component.literal("Not linked - Use Linking Device to connect")
-                        .withStyle(ChatFormatting.YELLOW),
-                    true
-                );
-            }
-        }
-        return InteractionResult.SUCCESS;
-    }
 
     @Override
     protected boolean isSignalSource(BlockState state) {
@@ -150,6 +118,8 @@ public class ComputerPillarBlock extends BaseEntityBlock {
             BlockEntity linkedEntity = world.getBlockEntity(linkedPos);
             if (linkedEntity instanceof AncientComputerBlockEntity linkedComputer) {
                 linkedComputer.clearLink();
+                // Play link_broken sound at the linked computer's position
+                world.playSound(null, linkedPos, ModSounds.LINK_BROKEN, SoundSource.BLOCKS, 1.0f, 1.0f);
             }
         }
         super.affectNeighborsAfterRemoval(state, world, pos, movedByPiston);
