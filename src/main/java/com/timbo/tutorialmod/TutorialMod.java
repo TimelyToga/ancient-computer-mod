@@ -4,6 +4,7 @@ import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import com.timbo.tutorialmod.items.ModItems;
 import com.timbo.tutorialmod.blocks.ModBlocks;
+import com.timbo.tutorialmod.blocks.ModBlockEntities;
 import org.slf4j.LoggerFactory;
 
 public class TutorialMod implements ModInitializer {
@@ -23,5 +24,6 @@ public class TutorialMod implements ModInitializer {
     LOGGER.info("Hello Fabric world!");
     ModItems.initialize();
     ModBlocks.initialize();
+    ModBlockEntities.initialize();
   }
 }

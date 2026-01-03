@@ -15,11 +15,15 @@ public class ModItems {
   public static final Item SUSPICIOUS_SUBSTANCE =
       register("suspicious_substance", Item::new, new Item.Properties());
 
+  public static final Item LINKING_DEVICE =
+      register("linking_device", LinkingDeviceItem::new, new Item.Properties().stacksTo(1));
+
   public static void initialize() {
     TutorialMod.LOGGER.info("Registering Mod Items for " + TutorialMod.MOD_ID);
 
     ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(content -> {
       content.accept(SUSPICIOUS_SUBSTANCE);
+      content.accept(LINKING_DEVICE);
     });
   }
 

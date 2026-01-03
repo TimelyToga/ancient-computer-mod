@@ -1,62 +1,175 @@
 package com.timbo.tutorialmod.blocks;
 
+import com.mojang.serialization.MapCodec;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.redstone.Orientation;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class ComputerPillarBlock extends RotatedPillarBlock {
+import org.jetbrains.annotations.Nullable;
+
+public class ComputerPillarBlock extends BaseEntityBlock {
+    public static final MapCodec<ComputerPillarBlock> CODEC = simpleCodec(ComputerPillarBlock::new);
+    public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.AXIS;
     public static final BooleanProperty ACTIVATED = BooleanProperty.create("activated");
 
     public ComputerPillarBlock(Properties settings) {
         super(settings);
-        // Set the default state: axis=Y and activated=false
         registerDefaultState(defaultBlockState()
                 .setValue(AXIS, Direction.Axis.Y)
                 .setValue(ACTIVATED, false));
     }
 
     @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
+    }
+
+    @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder); // This adds AXIS from RotatedPillarBlock
-        builder.add(ACTIVATED);
+        builder.add(AXIS, ACTIVATED);
+    }
+
+    @Override
+    public BlockState rotate(BlockState state, net.minecraft.world.level.block.Rotation rotation) {
+        return RotatedPillarBlock.rotatePillar(state, rotation);
+    }
+
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
+    }
+
+    @Nullable
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new AncientComputerBlockEntity(pos, state);
+    }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        return createTickerHelper(type, ModBlockEntities.ANCIENT_COMPUTER_BLOCK_ENTITY, AncientComputerBlockEntity::tick);
     }
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
-        if (!player.getAbilities().mayBuild) {
-            // Skip if the player isn't allowed to modify the world.
-            return InteractionResult.PASS;
-        } else {
-            // Get the current value of the "activated" property
-            boolean activated = state.getValue(ACTIVATED);
-
-            // Flip the value of activated and save the new blockstate.
-            world.setBlockAndUpdate(pos, state.setValue(ACTIVATED, !activated));
-
-            // Play a click sound to emphasise the interaction.
-            world.playSound(player, pos, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 1.0F, activated ? 0.5F : 1.0F);
-
+        if (world.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
+
+        BlockEntity blockEntity = world.getBlockEntity(pos);
+        if (blockEntity instanceof AncientComputerBlockEntity computer) {
+            // Show link status
+            if (computer.isLinked()) {
+                BlockPos linkedPos = computer.getLinkedPos();
+                int outputSignal = computer.getOutputSignal();
+                int inputSignal = computer.getLastInputSignal();
+                player.displayClientMessage(
+                    Component.literal("Linked to: " + linkedPos.toShortString() + 
+                        " | Input: " + inputSignal + " | Output: " + outputSignal)
+                        .withStyle(ChatFormatting.AQUA),
+                    true
+                );
+            } else {
+                player.displayClientMessage(
+                    Component.literal("Not linked - Use Linking Device to connect")
+                        .withStyle(ChatFormatting.YELLOW),
+                    true
+                );
+            }
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    protected boolean isSignalSource(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getSignal(BlockState state, BlockGetter world, BlockPos pos, Direction direction) {
+        BlockEntity blockEntity = world.getBlockEntity(pos);
+        if (blockEntity instanceof AncientComputerBlockEntity computer) {
+            return computer.getOutputSignal();
+        }
+        return 0;
+    }
+
+    @Override
+    protected int getDirectSignal(BlockState state, BlockGetter world, BlockPos pos, Direction direction) {
+        return getSignal(state, world, pos, direction);
+    }
+
+    @Override
+    protected void neighborChanged(BlockState state, Level world, BlockPos pos, Block neighborBlock, @Nullable Orientation orientation, boolean movedByPiston) {
+        super.neighborChanged(state, world, pos, neighborBlock, orientation, movedByPiston);
+        
+        if (!world.isClientSide()) {
+            BlockEntity blockEntity = world.getBlockEntity(pos);
+            if (blockEntity instanceof AncientComputerBlockEntity computer) {
+                int signal = world.getBestNeighborSignal(pos);
+                computer.onInputSignalChanged(signal);
+            }
+        }
+    }
+
+    @Override
+    protected void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+        super.onPlace(state, world, pos, oldState, movedByPiston);
+        if (!world.isClientSide()) {
+            // Check initial redstone state
+            BlockEntity blockEntity = world.getBlockEntity(pos);
+            if (blockEntity instanceof AncientComputerBlockEntity computer) {
+                int signal = world.getBestNeighborSignal(pos);
+                computer.onInputSignalChanged(signal);
+            }
+        }
+    }
+
+    @Override
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean movedByPiston) {
+        // Clear link from the linked computer before removal
+        BlockEntity blockEntity = world.getBlockEntity(pos);
+        if (blockEntity instanceof AncientComputerBlockEntity computer && computer.isLinked()) {
+            BlockPos linkedPos = computer.getLinkedPos();
+            BlockEntity linkedEntity = world.getBlockEntity(linkedPos);
+            if (linkedEntity instanceof AncientComputerBlockEntity linkedComputer) {
+                linkedComputer.clearLink();
+                // Update the linked block's activated state
+                BlockState linkedState = world.getBlockState(linkedPos);
+                if (linkedState.hasProperty(ACTIVATED) && linkedState.getValue(ACTIVATED)) {
+                    world.setBlock(linkedPos, linkedState.setValue(ACTIVATED, false), Block.UPDATE_ALL);
+                }
+            }
+        }
+        super.affectNeighborsAfterRemoval(state, world, pos, movedByPiston);
     }
 
     /**
      * Returns the light level based on the activated state.
-     * Used when registering the block.
      */
     public static int getLuminance(BlockState currentBlockState) {
         boolean activated = currentBlockState.getValue(ACTIVATED);
         return activated ? 15 : 0;
     }
 }
-

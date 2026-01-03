@@ -9,8 +9,7 @@ public class TutorialModDataGenerator implements DataGeneratorEntrypoint {
 		FabricDataGenerator.Pack pack = fabricDataGenerator.createPack();
 
 		pack.addProvider(TutorialModBlockLootTableProvider::new);
-		// pack.addProvider(TutorialModBlockStateProvider::new);
-		// pack.addProvider(TutorialModItemModelProvider::new);
+		pack.addProvider(TutorialModModelProvider::new);
 		pack.addProvider(TutorialModRecipeProvider::new);
 	}
 }
