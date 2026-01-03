@@ -21,6 +21,7 @@ public class TutorialModBlockLootTableProvider extends FabricBlockLootTableProvi
 	@Override
 	public void generate() {
 		dropSelf(ModBlocks.SUSPICIOUS_SUBSTANCE);
+		dropSelf(ModBlocks.COMPUTER_BLOCK);
 	
 		add(ModBlocks.SUSPICIOUS_SUBSTANCE, LootTable.lootTable().withPool(applyExplosionCondition(Items.OAK_LOG, LootPool.lootPool()
 		.setRolls(new UniformGenerator(new ConstantValue(4f), new ConstantValue(6f)))

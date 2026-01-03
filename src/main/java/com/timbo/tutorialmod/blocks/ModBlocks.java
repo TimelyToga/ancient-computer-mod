@@ -18,12 +18,22 @@ public class ModBlocks {
 
     public static final Block SUSPICIOUS_SUBSTANCE = register("suspicious_substance_block", Block::new, BlockBehaviour.Properties.of().strength(1.0f), true);
 
+    public static final Block COMPUTER_BLOCK = register(
+            "computer_block",
+            ComputerPillarBlock::new,
+            BlockBehaviour.Properties.of()
+                    .strength(2.0f)
+                    .lightLevel(ComputerPillarBlock::getLuminance),
+            true
+    );
+
    public static void initialize() {
     TutorialMod.LOGGER.info("Registering Mod Blocks for " + TutorialMod.MOD_ID);
 
     // Add to item group
     ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(content -> {
         content.accept(ModBlocks.SUSPICIOUS_SUBSTANCE.asItem());
+        content.accept(ModBlocks.COMPUTER_BLOCK.asItem());
     });
    }
 
