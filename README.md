@@ -2,7 +2,7 @@
 
 ![Ancient Computer](doc/ancient_computer.png)
 
-A Minecraft mod that adds ancient computers capable of wirelessly transmitting redstone signals across any distance.
+A Minecraft mod that adds ancient computers capable of wirelessly transmitting redstone signals up to 32 blocks away to another **Ancient Computer**.
 
 This is my first minecraft mod and I built it just to learn about the process. It's been pretty interesting to be honest.
 
