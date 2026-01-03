@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_echo_dust_block": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ancientcomputer:echo_dust_block"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ancientcomputer:echo_dust_from_block"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_echo_dust_block"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ancientcomputer:echo_dust_from_block"
+    ]
+  }
+}

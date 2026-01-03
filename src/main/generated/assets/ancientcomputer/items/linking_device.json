@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "ancientcomputer:item/linking_device"
+  }
+}
