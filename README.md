@@ -2,6 +2,8 @@
 
 A Minecraft mod that adds ancient computers capable of wirelessly transmitting redstone signals across any distance.
 
+This is my first minecraft mod and I built it just to learn about the process. It's been pretty interesting to be honest.
+
 ## Features
 
 - **Ancient Computer Block**: A redstone device that can send and receive wireless signals across unlimited distances
