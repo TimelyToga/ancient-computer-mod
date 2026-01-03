@@ -1,12 +1,14 @@
 # Ancient Computer
 
+![Ancient Computer](doc/ancient_computer.png)
+
 A Minecraft mod that adds ancient computers capable of wirelessly transmitting redstone signals across any distance.
 
 This is my first minecraft mod and I built it just to learn about the process. It's been pretty interesting to be honest.
 
 ## Features
 
-- **Ancient Computer Block**: A redstone device that can send and receive wireless signals across unlimited distances
+- **Ancient Computer Block**: A redstone device that can send and receive wireless signals 32 blocks away to another **Ancient Computer**
 - **Linking Device**: Tool used to link computers together
 - **Echo Dust**: A new material used in crafting, obtained from echo shards
 - **Echo Dust Block**: Storage block for echo dust
@@ -14,6 +16,7 @@ This is my first minecraft mod and I built it just to learn about the process. I
 ## Crafting
 
 **Ancient Computer**
+
 ```
 Polished Diorite x6
 Echo Shard x1

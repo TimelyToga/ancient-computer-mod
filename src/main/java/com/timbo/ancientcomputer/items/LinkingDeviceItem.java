@@ -19,6 +19,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class LinkingDeviceItem extends Item {
+    public static final int MAX_LINK_DISTANCE = 32;
+    
     public LinkingDeviceItem(Properties properties) {
         super(properties);
     }
@@ -102,6 +104,17 @@ public class LinkingDeviceItem extends Item {
             if (!storedDimension.equals(currentDimension)) {
                 context.getPlayer().displayClientMessage(
                     Component.literal("Cannot link computers across dimensions!")
+                        .withStyle(ChatFormatting.RED), 
+                    true
+                );
+                return InteractionResult.FAIL;
+            }
+
+            // Check distance limit
+            double distance = Math.sqrt(transmitterPos.distSqr(pos));
+            if (distance > MAX_LINK_DISTANCE) {
+                context.getPlayer().displayClientMessage(
+                    Component.literal("Too far! Max link distance is " + MAX_LINK_DISTANCE + " blocks (current: " + String.format("%.1f", distance) + ")")
                         .withStyle(ChatFormatting.RED), 
                     true
                 );
