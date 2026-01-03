@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "ancientcomputer:block/suspicious_substance_block"
-  }
-}

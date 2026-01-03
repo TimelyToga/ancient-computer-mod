@@ -16,7 +16,7 @@ import net.minecraft.world.item.CreativeModeTabs;
 
 public class ModBlocks {
 
-    public static final Block SUSPICIOUS_SUBSTANCE = register("suspicious_substance_block", Block::new, BlockBehaviour.Properties.of().strength(1.0f), true);
+    public static final Block ECHO_DUST_BLOCK = register("echo_dust_block", Block::new, BlockBehaviour.Properties.of().strength(1.0f), true);
 
     public static final Block COMPUTER_BLOCK = register(
             "computer_block",
@@ -32,7 +32,7 @@ public class ModBlocks {
 
     // Add to item group
     ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(content -> {
-        content.accept(ModBlocks.SUSPICIOUS_SUBSTANCE.asItem());
+        content.accept(ModBlocks.ECHO_DUST_BLOCK.asItem());
         content.accept(ModBlocks.COMPUTER_BLOCK.asItem());
     });
    }

@@ -31,32 +31,32 @@ public class AncientComputerRecipeProvider extends FabricRecipeProvider{
 			HolderLookup.RegistryLookup<Item> itemLookup = registries.lookupOrThrow(Registries.ITEM);
 
 			HolderLookup.RegistryLookup<Block> blockLookup = registries.lookupOrThrow(Registries.BLOCK);
-			ResourceKey<Item> suspiciousSubstanceItemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(AncientComputerMod.MOD_ID, "suspicious_substance"));
-			Item suspiciousSubstanceItem = itemLookup.getOrThrow(suspiciousSubstanceItemKey).value();
-			ResourceKey<Block> suspiciousSubstanceBlockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(AncientComputerMod.MOD_ID, "suspicious_substance_block"));
-			 Block suspiciousSubstanceBlock = blockLookup.getOrThrow(suspiciousSubstanceBlockKey).value();
+			ResourceKey<Item> echoDustItemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(AncientComputerMod.MOD_ID, "echo_dust"));
+			Item echoDustItem = itemLookup.getOrThrow(echoDustItemKey).value();
+			ResourceKey<Block> echoDustBlockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(AncientComputerMod.MOD_ID, "echo_dust_block"));
+			 Block echoDustBlock = blockLookup.getOrThrow(echoDustBlockKey).value();
 
 
 			@Override
 			public void buildRecipes() {
-				// Suspicious Substance recipes
-				shaped(RecipeCategory.MISC, suspiciousSubstanceItem)
+				// Echo Dust recipes
+				shaped(RecipeCategory.MISC, echoDustItem)
 					.pattern("  a")
 					.pattern(" a ")
 					.pattern("a  ")
 					.define('a', Items.AMETHYST_SHARD)
 					.unlockedBy("has_amethyst", has(Items.AMETHYST_SHARD))
 					.save(output);
-				shaped(RecipeCategory.MISC, suspiciousSubstanceBlock)
+				shaped(RecipeCategory.MISC, echoDustBlock)
 					.pattern("a")
 					.pattern("a")
-					.define('a', suspiciousSubstanceItem)
-					.unlockedBy("has_suspicious_substance", has(suspiciousSubstanceItem))
+					.define('a', echoDustItem)
+					.unlockedBy("has_echo_dust", has(echoDustItem))
 					.save(output);	
-				shapeless(RecipeCategory.MISC, suspiciousSubstanceItem, 2)
-					.requires(suspiciousSubstanceBlock)
-					.unlockedBy("has_suspicious_substance_block", has(suspiciousSubstanceBlock))
-					.save(output, ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(AncientComputerMod.MOD_ID, "suspicious_substance_from_block")));
+				shapeless(RecipeCategory.MISC, echoDustItem, 2)
+					.requires(echoDustBlock)
+					.unlockedBy("has_echo_dust_block", has(echoDustBlock))
+					.save(output, ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(AncientComputerMod.MOD_ID, "echo_dust_from_block")));
 				
 				// Ancient Computer recipe
 				// [Polished Diorite] [Polished Diorite] [Polished Diorite]
@@ -86,17 +86,17 @@ public class AncientComputerRecipeProvider extends FabricRecipeProvider{
 					.save(output);
 				
 				// Echo Shard crafting recipe
-				// [   ] [Suspicious Substance] [   ]
-				// [Suspicious Substance] [Eye of Ender] [Suspicious Substance]
-				// [   ] [Suspicious Substance] [   ]
+				// [   ] [Echo Dust] [   ]
+				// [Echo Dust] [Eye of Ender] [Echo Dust]
+				// [   ] [Echo Dust] [   ]
 				shaped(RecipeCategory.MISC, Items.ECHO_SHARD)
 					.pattern(" S ")
 					.pattern("SES")
 					.pattern(" S ")
-					.define('S', suspiciousSubstanceItem)
+					.define('S', echoDustItem)
 					.define('E', Items.ENDER_EYE)
-					.unlockedBy("has_suspicious_substance", has(suspiciousSubstanceItem))
-					.save(output, ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(AncientComputerMod.MOD_ID, "echo_shard_from_suspicious_substance")));
+					.unlockedBy("has_echo_dust", has(echoDustItem))
+					.save(output, ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath(AncientComputerMod.MOD_ID, "echo_shard_from_echo_dust")));
 			}
 		};
 	}

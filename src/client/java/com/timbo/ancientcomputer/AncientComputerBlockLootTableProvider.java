@@ -20,12 +20,12 @@ public class AncientComputerBlockLootTableProvider extends FabricBlockLootTableP
 
 	@Override
 	public void generate() {
-		dropSelf(ModBlocks.SUSPICIOUS_SUBSTANCE);
+		dropSelf(ModBlocks.ECHO_DUST_BLOCK);
 		dropSelf(ModBlocks.COMPUTER_BLOCK);
 	
-		add(ModBlocks.SUSPICIOUS_SUBSTANCE, LootTable.lootTable().withPool(applyExplosionCondition(Items.OAK_LOG, LootPool.lootPool()
+		add(ModBlocks.ECHO_DUST_BLOCK, LootTable.lootTable().withPool(applyExplosionCondition(Items.OAK_LOG, LootPool.lootPool()
 		.setRolls(new UniformGenerator(new ConstantValue(4f), new ConstantValue(6f)))
-		.add(LootItem.lootTableItem(ModBlocks.SUSPICIOUS_SUBSTANCE.asItem()))))
+		.add(LootItem.lootTableItem(ModBlocks.ECHO_DUST_BLOCK.asItem()))))
 );
 	}
 }

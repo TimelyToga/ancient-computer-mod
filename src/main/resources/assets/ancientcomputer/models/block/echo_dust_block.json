@@ -1,0 +1,7 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "ancientcomputer:block/echo_dust_block"
+  }
+}
+

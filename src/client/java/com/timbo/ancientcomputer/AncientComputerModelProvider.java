@@ -21,7 +21,7 @@ public class AncientComputerModelProvider extends FabricModelProvider {
     @Override
     public void generateItemModels(ItemModelGenerators itemModelGenerator) {
         // Simple flat items
-        itemModelGenerator.generateFlatItem(ModItems.SUSPICIOUS_SUBSTANCE, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.ECHO_DUST, ModelTemplates.FLAT_ITEM);
         itemModelGenerator.generateFlatItem(ModItems.LINKING_DEVICE, ModelTemplates.FLAT_ITEM);
     }
 

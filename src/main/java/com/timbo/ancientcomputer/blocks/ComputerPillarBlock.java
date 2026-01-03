@@ -1,11 +1,8 @@
 package com.timbo.ancientcomputer.blocks;
 
 import com.mojang.serialization.MapCodec;
-import com.timbo.ancientcomputer.sounds.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -109,21 +106,6 @@ public class ComputerPillarBlock extends BaseEntityBlock {
         // Initial state will be handled by tick
     }
 
-    @Override
-    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean movedByPiston) {
-        // Clear link from the linked computer before removal
-        BlockEntity blockEntity = world.getBlockEntity(pos);
-        if (blockEntity instanceof AncientComputerBlockEntity computer && computer.isLinked()) {
-            BlockPos linkedPos = computer.getLinkedPos();
-            BlockEntity linkedEntity = world.getBlockEntity(linkedPos);
-            if (linkedEntity instanceof AncientComputerBlockEntity linkedComputer) {
-                linkedComputer.clearLink();
-                // Play link_broken sound at the linked computer's position
-                world.playSound(null, linkedPos, ModSounds.LINK_BROKEN, SoundSource.BLOCKS, 1.0f, 1.0f);
-            }
-        }
-        super.affectNeighborsAfterRemoval(state, world, pos, movedByPiston);
-    }
 
     /**
      * Returns the light level based on the activated state.

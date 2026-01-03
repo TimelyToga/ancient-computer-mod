@@ -213,4 +213,18 @@ public class AncientComputerBlockEntity extends BlockEntity {
             blockEntity.transmitSignal(inputSignal);
         }
     }
+
+    @Override
+    public void setRemoved() {
+        // Clear the link on the partner computer before this block entity is removed
+        if (level != null && !level.isClientSide() && linkedPos != null) {
+            BlockEntity linkedEntity = level.getBlockEntity(linkedPos);
+            if (linkedEntity instanceof AncientComputerBlockEntity linkedComputer) {
+                linkedComputer.clearLink();
+                // Play link_broken sound at the linked computer's position
+                level.playSound(null, linkedPos, ModSounds.LINK_BROKEN, SoundSource.BLOCKS, 1.0f, 1.0f);
+            }
+        }
+        super.setRemoved();
+    }
 }

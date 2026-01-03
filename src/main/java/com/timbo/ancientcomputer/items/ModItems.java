@@ -12,8 +12,8 @@ import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.world.item.CreativeModeTabs;
 
 public class ModItems {
-  public static final Item SUSPICIOUS_SUBSTANCE =
-      register("suspicious_substance", Item::new, new Item.Properties());
+  public static final Item ECHO_DUST =
+      register("echo_dust", Item::new, new Item.Properties());
 
   public static final Item LINKING_DEVICE =
       register("linking_device", LinkingDeviceItem::new, new Item.Properties().stacksTo(1));
@@ -22,7 +22,7 @@ public class ModItems {
     AncientComputerMod.LOGGER.info("Registering Mod Items for " + AncientComputerMod.MOD_ID);
 
     ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(content -> {
-      content.accept(SUSPICIOUS_SUBSTANCE);
+      content.accept(ECHO_DUST);
       content.accept(LINKING_DEVICE);
     });
   }

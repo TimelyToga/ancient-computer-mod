@@ -1,7 +1,7 @@
 {
-  "item.ancientcomputer.suspicious_substance": "Suspicious Substance",
-  "block.ancientcomputer.suspicious_substance_block": "Suspicious Substance Block",
-  "item.ancientcomputer.suspicious_substance_block": "Suspicious Substance Block",
+  "item.ancientcomputer.echo_dust": "Echo Dust",
+  "block.ancientcomputer.echo_dust_block": "Echo Dust Block",
+  "item.ancientcomputer.echo_dust_block": "Echo Dust Block",
   "block.ancientcomputer.computer_block": "Ancient Computer",
   "item.ancientcomputer.computer_block": "Ancient Computer",
   "item.ancientcomputer.linking_device": "Linking Device"

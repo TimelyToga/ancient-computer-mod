@@ -1,7 +1,7 @@
 {
   "replace": false,
   "values": [
-    "ancientcomputer:suspicious_substance_block",
+    "ancientcomputer:echo_dust_block",
     "ancientcomputer:computer_block"
   ]
 }
