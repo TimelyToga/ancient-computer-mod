@@ -48,7 +48,6 @@ public class LinkingDeviceItem extends Item {
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         
         if (customData != null && customData.copyTag().contains("x")) {
-            // We have a stored transmitter position - set up receiver
             CompoundTag tag = customData.copyTag();
             
             BlockPos transmitterPos = new BlockPos(
@@ -59,49 +58,71 @@ public class LinkingDeviceItem extends Item {
             String storedDimension = tag.getStringOr("dimension", "");
             String currentDimension = world.dimension().registry().toString();
 
+            // If not sneaking, just show status (don't complete link)
+            if (context.getPlayer() == null || !context.getPlayer().isShiftKeyDown()) {
+                // Show status
+                world.playSound(null, pos, ModSounds.LINK_INQUIRY, SoundSource.BLOCKS, 1.0f, 1.0f);
+                
+                if (computer.isLinked()) {
+                    BlockPos linkedPos = computer.getLinkedPos();
+                    int signalLevel = computer.getCurrentSignalLevel();
+                    String role = computer.isTransmitter() ? "INPUT" : "OUTPUT";
+                    String arrow = computer.isTransmitter() ? " → " : " ← ";
+                    if (context.getPlayer() != null) {
+                        context.getPlayer().displayClientMessage(
+                            Component.literal("[" + role + "] " + pos.toShortString() + arrow + linkedPos.toShortString() + " | Signal: " + signalLevel)
+                                .withStyle(computer.isTransmitter() ? ChatFormatting.GOLD : ChatFormatting.AQUA),
+                            true
+                        );
+                    }
+                } else {
+                    if (context.getPlayer() != null) {
+                        context.getPlayer().displayClientMessage(
+                            Component.literal("Pending link from " + transmitterPos.toShortString() + " - Shift+click to complete")
+                                .withStyle(ChatFormatting.YELLOW),
+                            true
+                        );
+                    }
+                }
+                return InteractionResult.SUCCESS;
+            }
+
+            // Shift+click - complete the link
             // Don't allow linking to self
             if (transmitterPos.equals(pos) && storedDimension.equals(currentDimension)) {
-                if (context.getPlayer() != null) {
-                    context.getPlayer().displayClientMessage(
-                        Component.literal("Cannot link a computer to itself! Click a different computer.")
-                            .withStyle(ChatFormatting.RED), 
-                        true
-                    );
-                }
+                context.getPlayer().displayClientMessage(
+                    Component.literal("Cannot link a computer to itself! Click a different computer.")
+                        .withStyle(ChatFormatting.RED), 
+                    true
+                );
                 return InteractionResult.FAIL;
             }
 
             // Check dimensions match
             if (!storedDimension.equals(currentDimension)) {
-                if (context.getPlayer() != null) {
-                    context.getPlayer().displayClientMessage(
-                        Component.literal("Cannot link computers across dimensions!")
-                            .withStyle(ChatFormatting.RED), 
-                        true
-                    );
-                }
+                context.getPlayer().displayClientMessage(
+                    Component.literal("Cannot link computers across dimensions!")
+                        .withStyle(ChatFormatting.RED), 
+                    true
+                );
                 return InteractionResult.FAIL;
             }
 
             // Verify the transmitter still exists
             BlockEntity transmitterEntity = world.getBlockEntity(transmitterPos);
             if (!(transmitterEntity instanceof AncientComputerBlockEntity transmitter)) {
-                if (context.getPlayer() != null) {
-                    context.getPlayer().displayClientMessage(
-                        Component.literal("Source computer no longer exists! Select a new source.")
-                            .withStyle(ChatFormatting.YELLOW), 
-                        true
-                    );
-                }
+                context.getPlayer().displayClientMessage(
+                    Component.literal("Source computer no longer exists! Select a new source.")
+                        .withStyle(ChatFormatting.YELLOW), 
+                    true
+                );
                 // Store this position as new transmitter
                 storePosition(stack, pos, world);
-                if (context.getPlayer() != null) {
-                    context.getPlayer().displayClientMessage(
-                        Component.literal("Source (input) selected: " + pos.toShortString() + " - Now click destination")
-                            .withStyle(ChatFormatting.AQUA), 
-                        true
-                    );
-                }
+                context.getPlayer().displayClientMessage(
+                    Component.literal("Source (input) selected: " + pos.toShortString() + " - Shift+click destination")
+                        .withStyle(ChatFormatting.AQUA), 
+                    true
+                );
                 return InteractionResult.SUCCESS;
             }
 
@@ -131,18 +152,17 @@ public class LinkingDeviceItem extends Item {
             // Play link_established sound at the receiver (second clicked computer)
             world.playSound(null, pos, ModSounds.LINK_ESTABLISHED, SoundSource.BLOCKS, 1.0f, 1.0f);
 
-            if (context.getPlayer() != null) {
-                context.getPlayer().displayClientMessage(
-                    Component.literal("✓ Linked: " + transmitterPos.toShortString() + " (input) → " + pos.toShortString() + " (output)")
-                        .withStyle(ChatFormatting.GREEN), 
-                    true
-                );
-            }
+            context.getPlayer().displayClientMessage(
+                Component.literal("✓ Linked: " + transmitterPos.toShortString() + " (input) → " + pos.toShortString() + " (output)")
+                    .withStyle(ChatFormatting.GREEN), 
+                true
+            );
             return InteractionResult.SUCCESS;
         } else {
-            // No stored position - check if player is sneaking to show status
-            if (context.getPlayer() != null && context.getPlayer().isShiftKeyDown()) {
-                // Sneaking + linking device = show status without selecting
+            // No stored position
+            // Check if player is NOT sneaking - just show status
+            if (context.getPlayer() == null || !context.getPlayer().isShiftKeyDown()) {
+                // Normal right click = show status
                 world.playSound(null, pos, ModSounds.LINK_INQUIRY, SoundSource.BLOCKS, 1.0f, 1.0f);
                 
                 if (computer.isLinked()) {
@@ -150,32 +170,35 @@ public class LinkingDeviceItem extends Item {
                     int signalLevel = computer.getCurrentSignalLevel();
                     String role = computer.isTransmitter() ? "INPUT" : "OUTPUT";
                     String arrow = computer.isTransmitter() ? " → " : " ← ";
-                    context.getPlayer().displayClientMessage(
-                        Component.literal("[" + role + "] " + pos.toShortString() + arrow + linkedPos.toShortString() + " | Signal: " + signalLevel)
-                            .withStyle(computer.isTransmitter() ? ChatFormatting.GOLD : ChatFormatting.AQUA),
-                        true
-                    );
+                    if (context.getPlayer() != null) {
+                        context.getPlayer().displayClientMessage(
+                            Component.literal("[" + role + "] " + pos.toShortString() + arrow + linkedPos.toShortString() + " | Signal: " + signalLevel)
+                                .withStyle(computer.isTransmitter() ? ChatFormatting.GOLD : ChatFormatting.AQUA),
+                            true
+                        );
+                    }
                 } else {
-                    context.getPlayer().displayClientMessage(
-                        Component.literal("Not linked - Use Linking Device to connect")
-                            .withStyle(ChatFormatting.YELLOW),
-                        true
-                    );
+                    if (context.getPlayer() != null) {
+                        context.getPlayer().displayClientMessage(
+                            Component.literal("Not linked - Shift+right click to start linking")
+                                .withStyle(ChatFormatting.YELLOW),
+                            true
+                        );
+                    }
                 }
                 return InteractionResult.SUCCESS;
             }
             
+            // Shift + right click = start linking process
             // If this computer is already linked, show its status
             if (computer.isLinked()) {
                 BlockPos linkedPos = computer.getLinkedPos();
                 String role = computer.isTransmitter() ? "input → " + linkedPos.toShortString() : linkedPos.toShortString() + " → output";
-                if (context.getPlayer() != null) {
-                    context.getPlayer().displayClientMessage(
-                        Component.literal("This computer is already linked as " + role + ". Selecting as new source...")
-                            .withStyle(ChatFormatting.YELLOW), 
-                        true
-                    );
-                }
+                context.getPlayer().displayClientMessage(
+                    Component.literal("This computer is already linked as " + role + ". Selecting as new source...")
+                        .withStyle(ChatFormatting.YELLOW), 
+                    true
+                );
             }
             
             storePosition(stack, pos, world);
@@ -183,13 +206,11 @@ public class LinkingDeviceItem extends Item {
             // Play link_started sound at the first clicked computer
             world.playSound(null, pos, ModSounds.LINK_STARTED, SoundSource.BLOCKS, 1.0f, 1.0f);
             
-            if (context.getPlayer() != null) {
-                context.getPlayer().displayClientMessage(
-                    Component.literal("Source (input) selected: " + pos.toShortString() + " - Now click destination (output)")
-                        .withStyle(ChatFormatting.AQUA), 
-                    true
-                );
-            }
+            context.getPlayer().displayClientMessage(
+                Component.literal("Source (input) selected: " + pos.toShortString() + " - Shift+click destination (output)")
+                    .withStyle(ChatFormatting.AQUA), 
+                true
+            );
             return InteractionResult.SUCCESS;
         }
     }

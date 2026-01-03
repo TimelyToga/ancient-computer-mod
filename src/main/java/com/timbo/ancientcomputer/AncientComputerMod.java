@@ -36,16 +36,11 @@ public class AncientComputerMod implements ModInitializer {
     ModBlockEntities.initialize();
     ModSounds.initialize();
     
-    registerLinkBreakingCallback();
+    registerLinkingDeviceLeftClickCallback();
   }
   
-  private void registerLinkBreakingCallback() {
+  private void registerLinkingDeviceLeftClickCallback() {
     AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
-      // Only process on server side
-      if (world.isClientSide()) {
-        return InteractionResult.PASS;
-      }
-      
       // Check if player is holding the linking device
       if (!player.getItemInHand(hand).is(ModItems.LINKING_DEVICE)) {
         return InteractionResult.PASS;
@@ -56,41 +51,37 @@ public class AncientComputerMod implements ModInitializer {
         return InteractionResult.PASS;
       }
       
-      BlockEntity blockEntity = world.getBlockEntity(pos);
-      if (!(blockEntity instanceof AncientComputerBlockEntity computer)) {
-        return InteractionResult.PASS;
-      }
-      
-      // Only break link if the computer is linked
-      if (!computer.isLinked()) {
-        player.displayClientMessage(
-            Component.literal("This computer is not linked.")
-                .withStyle(ChatFormatting.GRAY),
-            true
-        );
-        // Still return SUCCESS to prevent mining with the linking device
+      // Only process display on server side
+      if (world.isClientSide()) {
+        // Return SUCCESS on client to prevent mining animation
         return InteractionResult.SUCCESS;
       }
       
-      // Get the linked computer and break the link on both ends
-      BlockPos linkedPos = computer.getLinkedPos();
-      BlockEntity linkedEntity = world.getBlockEntity(linkedPos);
-      
-      if (linkedEntity instanceof AncientComputerBlockEntity linkedComputer) {
-        linkedComputer.clearLink();
-        // Play link_broken sound at the linked computer too
-        world.playSound(null, linkedPos, ModSounds.LINK_BROKEN, SoundSource.BLOCKS, 1.0f, 1.0f);
+      BlockEntity blockEntity = world.getBlockEntity(pos);
+      if (!(blockEntity instanceof AncientComputerBlockEntity computer)) {
+        return InteractionResult.SUCCESS;
       }
-      computer.clearLink();
       
-      // Play link_broken sound at this computer
-      world.playSound(null, pos, ModSounds.LINK_BROKEN, SoundSource.BLOCKS, 1.0f, 1.0f);
+      // Left click = show status (same as right click without shift)
+      world.playSound(null, pos, ModSounds.LINK_INQUIRY, SoundSource.BLOCKS, 1.0f, 1.0f);
       
-      player.displayClientMessage(
-          Component.literal("✗ Link broken!")
-              .withStyle(ChatFormatting.RED),
-          true
-      );
+      if (computer.isLinked()) {
+        BlockPos linkedPos = computer.getLinkedPos();
+        int signalLevel = computer.getCurrentSignalLevel();
+        String role = computer.isTransmitter() ? "INPUT" : "OUTPUT";
+        String arrow = computer.isTransmitter() ? " → " : " ← ";
+        player.displayClientMessage(
+            Component.literal("[" + role + "] " + pos.toShortString() + arrow + linkedPos.toShortString() + " | Signal: " + signalLevel)
+                .withStyle(computer.isTransmitter() ? ChatFormatting.GOLD : ChatFormatting.AQUA),
+            true
+        );
+      } else {
+        player.displayClientMessage(
+            Component.literal("Not linked - Shift+right click to start linking")
+                .withStyle(ChatFormatting.YELLOW),
+            true
+        );
+      }
       
       // Return SUCCESS to prevent the block from being mined
       return InteractionResult.SUCCESS;
